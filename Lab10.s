@@ -18,146 +18,114 @@
 * Creado por:
 * Alejandro Gómez 20347
 * Marco Jurado 20308
-* Adaptado de archivo led3_ok subido a canvas
+* Adaptado de archivo pruebaa subido a canvas
  -------------------------------------------*/ 
 
- .text
- .align 2
- .global main
 
-main:
-/*----- EQUIVALENTE A LLAMAR BIBLIOTECAS -----*/
-	@ Map GPIO page (0x3F200000) 		@ Referirse a la dirección base para manejo de puertos
-	@ to our virtual address space
- 	
-	//Puertos para 0-9
-	ldr r0, =0x3F200000
- 	bl phys_to_virt
- 	mov r7, r0  @ r7 points to that physical page
- 	ldr r6, =myloc
- 	str r7, [r6] @ save
+/*
+Puertos GPIO a utilizar:
+		
+		Puertos 20-29
+		GPIO 27 = 13
+		GPIO 22 = 15
+		GPIO 23 = 16
+		GPIO 24 = 18
+
+		Puertos 0-9
+		GPIO 5  = 29
+		GPIO 6  = 31
+
+		Puertos 10-19
+		GPIO 17 = 11
+		GPIO 16 = 36
+		
+		GROUND  = 6
+*/
 	 
-	//Puertos para 10-19
-	mov r7,#0
-	ldr r0, = 0x3F200004
-	bl phys_to_virt
-	mov r7,r0
-	ldr r, =myloc1
-	str r7,
+@ To assemble, link, and run:
+@
+@  as -o blink.o blink.s 
+@  gcc -o blink2 blink.o -lwiringPi 
+@  sudo ./blink2 
+@ ---------------------------------------
+@ Description: 
+@ blink 10 times pin 36 
+@ ---------------------------------------
 
-	//Puertos para 20-29
-	mov r7,#0
-	ldr r0, =0x3F200008
- 	bl phys_to_virt
- 	mov r7, r0  @ r7 points to that physical page
- 	ldr r9, =myloc
- 	str r7, [r9] @ save
-	 
-
-loop:	
-
-/*----- SELECCIONAR FUNCTION GPIO de escritura --> 001 -----*/
-	/*
-	Puertos GPIO a utilizar:
-			
-			Puertos 20-29
-			GPIO 27 = 13
-			GPIO 22 = 15
-			GPIO 23 = 16
-			GPIO 24 = 18
-
-			Puertos 0-9
-			GPIO 5  = 29
-			GPIO 6  = 31
-
-			Puertos 10-19
-			GPIO 17 = 11
-			GPIO 16 = 36
-			
-			GROUND  = 6
-	 */
-	 
-	//GPIO 17 - segmento A
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
+@ ---------------------------------------
+@	Data Section
+@ ---------------------------------------
+	 .data
+	 .balign 4	
+Intro: 	 .asciz  "Raspberry Pi wiringPi blink test\n"
+ErrMsg:	 .asciz	"Setup didn't work... Aborting...\n"
+pin:	 .int	27
+i:	 	 .int	0
+delayMs: .int	250
+OUTPUT	 =	1
 	
-	//GPIO 27 - segmento B
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 22 - segmento F
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 23 - segmento G
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 24 - segmento C
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 5 - segmento E
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 6 - segmento D
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-	//GPIO 16 - segmento DP
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]
-
-
-	//GPIO G - Ground
-	mov r1,#1					//#1 SALIDA
-	lsl r1,#18					// lsl de XX para ir a GPIO no. XX				
-	str r1,[r0,#4]				
-
-
-
-/*----- Encender y apagar los GPIO-----*/
-	@GPIO 16 low, ilumina el led
-	mov r1,#1
-	lsl r1,#16
-	str r1,[r0,#40]				@40 equivale a 0x28 en hex
+@ ---------------------------------------
+@	Code Section
+@ ---------------------------------------
 	
-	push {r0}
-	bl wait
-	pop {r0}
+	.text
+	.global main
+	.extern printf
+	.extern wiringPiSetup
+	.extern delay
+	.extern digitalWrite
+	.extern pinMode
 	
-	@GPIO 16 low, apaga el led
-	str r1,[r0,#28]				@28 equivale a 0x1C en hex
+main:   push 	{ip, lr}	@ push return address + dummy register
+				@ for alignment
+
+	bl	wiringPiSetup			// Inicializar librería wiringpi
+	mov	r1,#-1					// -1 representa un código de error
+	cmp	r0, r1					// verifica si se retornó cod error en r0
+	bne	init					// NO error, entonces iniciar programa
+	ldr	r0, =ErrMsg				// SI error, 
+	bl	printf					// imprimir mensaje y
+	b	done					// salir del programa
+
+@  pinMode(pin, OUTPUT)		;
+init:
+	ldr	r0, =pin				// coloca el #pin wiringpi a r0
+	ldr	r0, [r0]
+	mov	r1, #OUTPUT				// lo configura como salida, r1 = 1
+	bl	pinMode					// llama funcion wiringpi para configurar
+
+@   for ( i=0; i<10; i++ ) { 	
+	ldr	r4, =i					// carga valor de contador en 10
+	ldr	r4, [r4]
+	mov	r5, #10
+forLoop:						// inicio de ciclo 
+	cmp	r4, r5
+	bgt	done					// si el ciclo se ha completado 10 veces
+								// entonces termina programa
+@	digitalWrite(pin, 1) ;		
+	ldr	r0, =pin				// carga dirección de pin
+	ldr	r0, [r0]				// operaciones anteriores borraron valor de pin en r0
+	mov	r1, #1
+	bl 	digitalWrite			// escribe 1 en pin para activar puerto GPIO
 	
-	push {r0}
-	bl wait
-	pop {r0}	
+@       delay(250)		 ;
+	ldr	r0, =delayMs
+	ldr	r0, [r0]
+	bl	delay
+
+@       digitalWrite(pin, 0) 	;
+	ldr	r0, =pin				// carga dirección de pin
+	ldr	r0, [r0]				// operaciones anteriores borraron valor de pin en r0
+	mov	r1, #0
+	bl 	digitalWrite			// escribe 0 en pin para desactivar puerto GPIO
+
+@       delay(250)		 ;
+	ldr	r0, =delayMs
+	ldr	r0, [r0]
+	bl	delay
+
+	add	r4, #1					// incrementa contador
+	b	forLoop					// repite ciclo
 	
-	b loop
-
-@ brief pause routine
-wait:
-	mov r0, #0x4000000 @ big number
-
-sleepLoop:
-	subs r0,#1
-	bne sleepLoop @ loop delay
-	mov pc,lr
-
- .data
- .align 2
-myloc: .word 0
-myloc1: .word 0
-myloc2: .word 0
-
- .end
-
+done:	
+        pop 	{ip, pc}	@ pop return address into pc
