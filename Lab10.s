@@ -22,21 +22,6 @@
  -------------------------------------------*/ 
 
 
-	 
-@ To assemble, link, and run:
-@
-@  as -o blink.o blink.s 
-@  gcc -o blink2 blink.o -lwiringPi 
-@  sudo ./blink2 
-@ ---------------------------------------
-@ Description: 
-@ blink 10 times pin 36 
-@ ---------------------------------------
-
-@ ---------------------------------------
-@	Data Section
-@ ---------------------------------------
-
 /*
 Puertos GPIO a utilizar:
 		
@@ -58,14 +43,14 @@ Puertos GPIO a utilizar:
 */
 
 /* REPRESENTACION EN GRAFICO
-	GPIO 16 = Segmento A 
-	GPIO 6 = Segmento B
-	GPIO 5 = Segmento F
-	GPIO 24 = Segmento G
-	GPIO 23 = Segmento C
-	GPIO 22 = Segmento E
-	GPIO 27 = Segmento D
-	GPIO 17 = Segmento DP
+	GPIO 21 = Segmento A 
+	GPIO 5 = Segmento B
+	GPIO 4 = Segmento F
+	GPIO 3 = Segmento G
+	GPIO 2 = Segmento C
+	GPIO 1 = Segmento E
+	GPIO 0 = Segmento D
+	GPIO 6 = Segmento DP
 	Ground = Ground
 	*/
 
@@ -73,14 +58,14 @@ Puertos GPIO a utilizar:
 .balign 4	
 Intro: 	 .asciz  "Raspberry Pi wiringPi blink test\n"
 ErrMsg:	 .asciz	"Setup didn't work... Aborting...\n"
-pin1:	.int	27 //segmento D
-pin2:	.int	22 //segmento E
-pin3:	.int 	23 //segmento C
-pin4:	.int 	24 //segmento G
-pin5:	.int 	5  //segmento F
-pin6:	.int 	6  //segmento B
-pin7:	.int	17 //segmento DP
-pin8:	.int 	16 //segmento A
+pin1:	.int	0 //segmento D
+pin2:	.int	1 //segmento E
+pin3:	.int 	22 //segmento C
+pin4:	.int 	3 //segmento G
+pin5:	.int 	4  //segmento F
+pin6:	.int 	5  //segmento B
+pin7:	.int	6 //segmento DP
+pin8:	.int 	21 //segmento A
 
 i:	 	 .int	0
 delayMs: .int	450
