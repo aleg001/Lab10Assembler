@@ -68,7 +68,7 @@ pin7:	.int	6 //segmento DP
 pin8:	.int 	21 //segmento A
 
 i:	 	 .int	0
-delayMs: .int	450
+delayMs: .int	1200
 OUTPUT	 =	1
 	
 @ ---------------------------------------
